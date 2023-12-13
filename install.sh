@@ -98,7 +98,7 @@ download_cf() {
         return 0
     fi
      [ ! -d "/etc/s-box" ] && mkdir /etc/s-box
-    [ ! -d "/root/Deyshighnet/configs" ] && mkdir -p /root/Deyshighnet/configs
+    [ ! -d "/root/peyman/configs" ] && mkdir -p /root/peyman/configs
     # Check the operating system type
     if [[ "$(uname -m)" == "x86_64" ]]; then
         download_url="https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64"
@@ -127,12 +127,12 @@ install_certs(){
     echo ""
     read -rp "Please enter options [1-2]: " certInput
     if [[ $certInput == 2 ]]; then
-        cert_path="/root/Deyshighnet/cert.crt"
-        key_path="/root/Deyshighnet/private.key"
+        cert_path="/root/peyman/cert.crt"
+        key_path="/root/peyman/private.key"
         tf="true"
 
-        if [[ -f /root/Deyshighnet/cert.crt && -f /root/Deyshighnet/private.key ]] && [[ -s /root/Deyshighnet/cert.crt && -s /root/Deyshighnet/private.key ]] && [[ -f /root/Deyshighnet/ca.log ]]; then
-            domain=$(cat /root/Deyshighnet/ca.log)
+        if [[ -f /root/peyman/cert.crt && -f /root/peyman/private.key ]] && [[ -s /root/peyman/cert.crt && -s /root/peyman/private.key ]] && [[ -f /root/peyman/ca.log ]]; then
+            domain=$(cat /root/peyman/ca.log)
             echo -e "${green}The certificate of the original domain name: $domain was detected and is being applied${rest}"
             hy_domain=$domain
         else
@@ -172,17 +172,17 @@ install_certs(){
                 else
                     bash ~/.acme.sh/acme.sh --issue -d ${domain} --standalone -k ec-256 --insecure
                 fi
-                bash ~/.acme.sh/acme.sh --install-cert -d ${domain} --key-file /root/Deyshighnet/private.key --fullchain-file /root/Deyshighnet/cert.crt --ecc
-                if [[ -f /root/Deyshighnet/cert.crt && -f /root/Deyshighnet/private.key ]] && [[ -s /root/Deyshighnet/cert.crt && -s /root/Deyshighnet/private.key ]]; then
-                    echo $domain > /root/Deyshighnet/ca.log
+                bash ~/.acme.sh/acme.sh --install-cert -d ${domain} --key-file /root/peyman/private.key --fullchain-file /root/peyman/cert.crt --ecc
+                if [[ -f /root/peyman/cert.crt && -f /root/peyman/private.key ]] && [[ -s /root/peyman/cert.crt && -s /root/peyman/private.key ]]; then
+                    echo $domain > /root/peyman/ca.log
                     sed -i '/--cron/d' /etc/crontab >/dev/null 2>&1
                     echo "0 0 * * * root bash /root/.acme.sh/acme.sh --cron -f >/dev/null 2>&1" >> /etc/crontab
                     echo -e "${green}Successful! The certificate (cer.crt) and private key (private.key) saved in /root${rest}"
-                    echo -e "${green}The certificate crt file path: /root/Deyshighnet/cert.crt${rest}"
-                    echo -e "${green}The private key file path: /root/Deyshighnet/private.key${rest}"
-                    chmod 777 /root/Deyshighnet/cert.crt
-                    chmod 777 /root/Deyshighnet/private.key
-                    chmod 777 /root/Deyshighnet/ca.log
+                    echo -e "${green}The certificate crt file path: /root/peyman/cert.crt${rest}"
+                    echo -e "${green}The private key file path: /root/peyman/private.key${rest}"
+                    chmod 777 /root/peyman/cert.crt
+                    chmod 777 /root/peyman/private.key
+                    chmod 777 /root/peyman/ca.log
                     hy_domain=$domain
                     read -rp "Do you want to use a subdomain with CDN [ON] for configs with TLS? Enter a subdomain or Press Enter to skip :" subdomain
                     if [[ -n $subdomain ]]; then
@@ -202,13 +202,13 @@ install_certs(){
         fi
     else
         echo -e "${green}You selected Bing self-signed certificate.${rest}"
-        cert_path="/root/Deyshighnet/cert.crt"
-        key_path="/root/Deyshighnet/private.key"
-        [ ! -d "/root/Deyshighnet/configs" ] && mkdir -p /root/Deyshighnet/configs
-        openssl ecparam -genkey -name prime256v1 -out /root/Deyshighnet/private.key
-        openssl req -new -x509 -days 36500 -key /root/Deyshighnet/private.key -out /root/Deyshighnet/cert.crt -subj "/CN=www.bing.com"
-        chmod 777 /root/Deyshighnet/cert.crt
-        chmod 777 /root/Deyshighnet/private.key
+        cert_path="/root/peyman/cert.crt"
+        key_path="/root/peyman/private.key"
+        [ ! -d "/root/peyman/configs" ] && mkdir -p /root/peyman/configs
+        openssl ecparam -genkey -name prime256v1 -out /root/peyman/private.key
+        openssl req -new -x509 -days 36500 -key /root/peyman/private.key -out /root/peyman/cert.crt -subj "/CN=www.bing.com"
+        chmod 777 /root/peyman/cert.crt
+        chmod 777 /root/peyman/private.key
         hy_domain="www.bing.com"
         domain="$ip"
         tf="false"
@@ -370,8 +370,8 @@ server_config() {
                 "server_name": "$domain_cdn",
                 "min_version": "1.2",
                 "max_version": "1.3",
-                "certificate_path": "/root/Deyshighnet/cert.crt",
-                "key_path": "/root/Deyshighnet/private.key"
+                "certificate_path": "/root/peyman/cert.crt",
+                "key_path": "/root/peyman/private.key"
             }
     },
 {
@@ -395,8 +395,8 @@ server_config() {
                 "server_name": "$domain_cdn",
                 "min_version": "1.2",
                 "max_version": "1.3",
-                "certificate_path": "/root/Deyshighnet/cert.crt",
-                "key_path": "/root/Deyshighnet/private.key"
+                "certificate_path": "/root/peyman/cert.crt",
+                "key_path": "/root/peyman/private.key"
             }
         },
     {
@@ -419,8 +419,8 @@ server_config() {
             ],
             "min_version":"1.2",
             "max_version":"1.3",
-            "certificate_path": "/root/Deyshighnet/cert.crt",
-            "key_path": "/root/Deyshighnet/private.key"
+            "certificate_path": "/root/peyman/cert.crt",
+            "key_path": "/root/peyman/private.key"
         }
     },
         {
@@ -442,8 +442,8 @@ server_config() {
                 "alpn": [
                     "h3"
                 ],
-                "certificate_path": "/root/Deyshighnet/cert.crt",
-                "key_path": "/root/Deyshighnet/private.key"
+                "certificate_path": "/root/peyman/cert.crt",
+                "key_path": "/root/peyman/private.key"
             }
         }
 ],
@@ -579,13 +579,13 @@ telegram_ip() {
         message="🖐سلام، کانفیگ های شما با موفقیت ساخته شد.
 
 1⃣
-$(config_ip | grep -o 'tuic://.*#Deyshighnet-tuic5')
+$(config_ip | grep -o 'tuic://.*#peyman-tuic5')
 
 2⃣
-$(config_ip | grep -o 'hysteria2://.*#Deyshighnet-hy2')
+$(config_ip | grep -o 'hysteria2://.*#peyman-hy2')
 
 3⃣
-$(config_ip | grep -o 'vless://.*#Deyshighnet-vless-reality')
+$(config_ip | grep -o 'vless://.*#peyman-vless-reality')
 
 4⃣
 $(config_ip | grep -o 'vmess://.*' | head -n 1)
@@ -597,7 +597,7 @@ $(config_ip | grep -o 'vmess://.*' | tail -n 1)"
             --data-urlencode "chat_id=$chat_id" \
             --data-urlencode "text=$message")
             
-        json_file="/root/Deyshighnet/configs/config-nekobox.json"
+        json_file="/root/peyman/configs/config-nekobox.json"
         caption="📦 این فایل ترکیب کانفیگ با هم است. لطفا روی نرم افزار Nekobox اجرا شود."
         
         curl -s -X POST \
@@ -606,7 +606,7 @@ $(config_ip | grep -o 'vmess://.*' | tail -n 1)"
             -F chat_id=$chat_id \
             -F caption="$caption" > /dev/null 
             
-        json_files="/root/Deyshighnet/configs/config-sing-box.json"
+        json_files="/root/peyman/configs/config-sing-box.json"
         captions="📦 این فایل ترکیب کانفیگ با هم است. لطفا روی نرم افزار Sing-Box اجرا شود."
         
         curl -s -X POST \
@@ -647,37 +647,37 @@ config_ip() {
         echo ""
         echo -e "${purple}--------------------These are your configs.----------------------${rest}"
         echo ""
-        tuic="tuic://$uuid:$uuid@$ip:$tuicport?congestion_control=bbr&udp_relay_mode=native&alpn=h3&sni=www.bing.com&allow_insecure=1#Deyshighnet-tuic5"
+        tuic="tuic://$uuid:$uuid@$ip:$tuicport?congestion_control=bbr&udp_relay_mode=native&alpn=h3&sni=www.bing.com&allow_insecure=1#peyman-tuic5"
         echo "$tuic"
         echo ""
         echo -e "${purple}---------------------------------TUIC5-------------------------------${rest}"
         echo "$tuic" | qrencode -t ANSIUTF8
-        echo "$tuic" > "/root/Deyshighnet/configs/tuic_config.txt"
+        echo "$tuic" > "/root/peyman/configs/tuic_config.txt"
         echo -e "${purple}----------------------------------------------------------------${rest}"
         
-        hysteria2="hysteria2://$uuid@$ip:$hyport?insecure=1&mport=$hyport&sni=www.bing.com#Deyshighnet-hy2"
+        hysteria2="hysteria2://$uuid@$ip:$hyport?insecure=1&mport=$hyport&sni=www.bing.com#peyman-hy2"
         echo "$hysteria2"
         echo ""
         echo -e "${purple}-------------------------------HYSTERIA2-----------------------------${rest}"
         echo "$hysteria2" | qrencode -t ANSIUTF8
-        echo "$hysteria2" > "/root/Deyshighnet/configs/hysteria2_config.txt"
+        echo "$hysteria2" > "/root/peyman/configs/hysteria2_config.txt"
         echo -e "${purple}----------------------------------------------------------------${rest}"
 
-        vless="vless://$uuid@$ip:$vlessport?encryption=none&flow=xtls-rprx-vision&security=reality&sni=www.yahoo.com&fp=chrome&pbk=$public_key&sid=$short_id&type=tcp&headerType=none#Deyshighnet-vless-reality"
+        vless="vless://$uuid@$ip:$vlessport?encryption=none&flow=xtls-rprx-vision&security=reality&sni=www.yahoo.com&fp=chrome&pbk=$public_key&sid=$short_id&type=tcp&headerType=none#peyman-vless-reality"
         echo "$vless"
         echo ""
         echo -e "${purple}----------------------------VlESS-TCP-REALITY------------------------${rest}"
         echo "$vless" | qrencode -t ANSIUTF8
-        echo "$vless" > "/root/Deyshighnet/configs/vless_config.txt"
+        echo "$vless" > "/root/peyman/configs/vless_config.txt"
         echo -e "${purple}----------------------------------------------------------------${rest}"
 
-        vmess="{\"add\":\"$ip\",\"aid\":\"0\",\"host\":\"www.bing.com\",\"id\":\"$uuid\",\"net\":\"ws\",\"path\":\"$uuid\",\"port\":\"$vmessport\",\"ps\":\"Deyshighnet-ws\",\"tls\":\"\",\"type\":\"none\",\"v\":\"2\"}"
+        vmess="{\"add\":\"$ip\",\"aid\":\"0\",\"host\":\"www.bing.com\",\"id\":\"$uuid\",\"net\":\"ws\",\"path\":\"$uuid\",\"port\":\"$vmessport\",\"ps\":\"peyman-ws\",\"tls\":\"\",\"type\":\"none\",\"v\":\"2\"}"
         encoded_vmess=$(echo -n "$vmess" | base64 -w 0)
         echo "vmess://$encoded_vmess"
         echo ""
         echo -e "${purple}--------------------------------VMESS-WS----------------------------${rest}"
         echo "$vmess://$encoded_vmess" | qrencode -t ANSIUTF8
-        echo "vmess://$encoded_vmess" > "/root/Deyshighnet/configs/vmess_config.txt"
+        echo "vmess://$encoded_vmess" > "/root/peyman/configs/vmess_config.txt"
         echo -e "${purple}----------------------------------------------------------------${rest}"
     else
         link=$(grep -o 'https://.*trycloudflare.com' /etc/s-box/argo.log | sed 's/https:\/\///')
@@ -686,46 +686,46 @@ config_ip() {
         echo ""
         echo -e "${purple}--------------------These are your configs.----------------------${rest}"
         echo ""
-        tuic="tuic://$uuid:$uuid@$ip:$tuicport?congestion_control=bbr&udp_relay_mode=native&alpn=h3&sni=www.bing.com&allow_insecure=1#Deyshighnet-tuic5"
+        tuic="tuic://$uuid:$uuid@$ip:$tuicport?congestion_control=bbr&udp_relay_mode=native&alpn=h3&sni=www.bing.com&allow_insecure=1#peyman-tuic5"
         echo "$tuic"
         echo ""
         echo -e "${purple}---------------------------------TUIC5-------------------------------${rest}"
         echo "$tuic" | qrencode -t ANSIUTF8
-        echo "$tuic" > "/root/Deyshighnet/configs/tuic_config.txt"
+        echo "$tuic" > "/root/peyman/configs/tuic_config.txt"
         echo -e "${purple}----------------------------------------------------------------${rest}"
         
-        hysteria2="hysteria2://$uuid@$ip:$hyport?insecure=1&mport=$hyport&sni=www.bing.com#Deyshighnet-hy2"
+        hysteria2="hysteria2://$uuid@$ip:$hyport?insecure=1&mport=$hyport&sni=www.bing.com#peyman-hy2"
         echo "$hysteria2"
         echo ""
         echo -e "${purple}-------------------------------HYSTERIA2-----------------------------${rest}"
         echo "$hysteria2" | qrencode -t ANSIUTF8
-        echo "$hysteria2" > "/root/Deyshighnet/configs/hysteria2_config.txt"
+        echo "$hysteria2" > "/root/peyman/configs/hysteria2_config.txt"
         echo -e "${purple}----------------------------------------------------------------${rest}"
 
-        vless="vless://$uuid@$ip:$vlessport?encryption=none&flow=xtls-rprx-vision&security=reality&sni=www.yahoo.com&fp=chrome&pbk=$public_key&sid=$short_id&type=tcp&headerType=none#Deyshighnet-vless-reality"
+        vless="vless://$uuid@$ip:$vlessport?encryption=none&flow=xtls-rprx-vision&security=reality&sni=www.yahoo.com&fp=chrome&pbk=$public_key&sid=$short_id&type=tcp&headerType=none#peyman-vless-reality"
         echo "$vless"
         echo ""
         echo -e "${purple}----------------------------VlESS-TCP-REALITY------------------------${rest}"
         echo "$vless" | qrencode -t ANSIUTF8
-        echo "$vless" > "/root/Deyshighnet/configs/vless_config.txt"
+        echo "$vless" > "/root/peyman/configs/vless_config.txt"
         echo -e "${purple}----------------------------------------------------------------${rest}"
 
-        vmess="{\"add\":\"$ip\",\"aid\":\"0\",\"host\":\"www.bing.com\",\"id\":\"$uuid\",\"net\":\"ws\",\"path\":\"$uuid\",\"port\":\"$vmessport\",\"ps\":\"Deyshighnet-ws\",\"tls\":\"\",\"type\":\"none\",\"v\":\"2\"}"
+        vmess="{\"add\":\"$ip\",\"aid\":\"0\",\"host\":\"www.bing.com\",\"id\":\"$uuid\",\"net\":\"ws\",\"path\":\"$uuid\",\"port\":\"$vmessport\",\"ps\":\"peyman-ws\",\"tls\":\"\",\"type\":\"none\",\"v\":\"2\"}"
         encoded_vmess=$(echo -n "$vmess" | base64 -w 0)
         echo "vmess://$encoded_vmess"
         echo ""
         echo -e "${purple}----------------------------------VMESS-WS------------------------------${rest}"
         echo "$vmess://$encoded_vmess" | qrencode -t ANSIUTF8
-        echo "vmess://$encoded_vmess" > "/root/Deyshighnet/configs/vmess_config.txt"
+        echo "vmess://$encoded_vmess" > "/root/peyman/configs/vmess_config.txt"
         echo -e "${purple}----------------------------------------------------------------${rest}"
 
-        vmess="{\"add\":\"104.31.16.60\",\"aid\":\"0\",\"host\":\"$link\",\"id\":\"$uuid\",\"net\":\"ws\",\"path\":\"$uuid\",\"port\":\"443\",\"ps\":\"Deyshighnet-vmess-Argo\",\"tls\":\"tls\",\"sni\":\"$link\",\"type\":\"none\",\"v\":\"2\"}"
+        vmess="{\"add\":\"104.31.16.60\",\"aid\":\"0\",\"host\":\"$link\",\"id\":\"$uuid\",\"net\":\"ws\",\"path\":\"$uuid\",\"port\":\"443\",\"ps\":\"peyman-vmess-Argo\",\"tls\":\"tls\",\"sni\":\"$link\",\"type\":\"none\",\"v\":\"2\"}"
         encoded_vmess=$(echo -n "$vmess" | base64 -w 0)
         echo "vmess://$encoded_vmess"
         echo ""
         echo -e "${purple}-------------------------VMESS-WS-TLS+ARGO-TUNNEL------------------${rest}"
         echo "$vmess://$encoded_vmess" | qrencode -t ANSIUTF8
-        echo "vmess://$encoded_vmess" > "/root/Deyshighnet/configs/vmess_Argo_config.txt"
+        echo "vmess://$encoded_vmess" > "/root/peyman/configs/vmess_Argo_config.txt"
         echo -e "${purple}----------------------------------------------------------------${rest}"
         
         (crontab -l 2>/dev/null | grep -q -F "@reboot /bin/bash -c \"/etc/s-box/cloudflared tunnel --url http://localhost:$(jq -r .inbounds[1].listen_port /etc/s-box/sb.json) --edge-ip-version auto --no-autoupdate --protocol http2 > /etc/s-box/argo.log 2>&1\"") || (crontab -l 2>/dev/null ; echo "@reboot /bin/bash -c \"/etc/s-box/cloudflared tunnel --url http://localhost:$(jq -r .inbounds[1].listen_port /etc/s-box/sb.json) --edge-ip-version auto --no-autoupdate --protocol http2 > /etc/s-box/argo.log 2>&1\"") | crontab - > /dev/null 2>&1
@@ -749,13 +749,13 @@ telegram_tls() {
         message="🖐سلام، کانفیگ های شما با موفقیت ساخته شد.
         
 1⃣
-$(config_tls | grep -o 'tuic://.*#Deyshighnet-tuic5')
+$(config_tls | grep -o 'tuic://.*#peyman-tuic5')
 
 2⃣
-$(config_tls | grep -o 'hysteria2://.*#Deyshighnet-hy2')
+$(config_tls | grep -o 'hysteria2://.*#peyman-hy2')
 
 3⃣
-$(config_tls | grep -o 'vless://.*#Deyshighnet-vless-reality')
+$(config_tls | grep -o 'vless://.*#peyman-vless-reality')
 
 4⃣
 $(config_tls | grep -o 'vmess://.*')
@@ -767,7 +767,7 @@ $(config_tls | grep -o 'vless://.*' | tail -n 1)"
             --data-urlencode "chat_id=$chat_id" \
             --data-urlencode "text=$message")
             
-        file="/root/Deyshighnet/configs/config-nekobox.json"
+        file="/root/peyman/configs/config-nekobox.json"
         caption="📦 این فایل ترکیب کانفیگ با هم است. لطفا روی نرم افزار Nekobox اجرا شود."
         
         curl -s -X POST \
@@ -776,7 +776,7 @@ $(config_tls | grep -o 'vless://.*' | tail -n 1)"
             -F chat_id=$chat_id \
             -F caption="$caption" > /dev/null 
             
-        files="/root/Deyshighnet/configs/config-sing-box.json"
+        files="/root/peyman/configs/config-sing-box.json"
         captions="📦 این فایل ترکیب کانفیگ با هم است. لطفا روی نرم افزار Sing-Box اجرا شود."
         
         curl -s -X POST \
@@ -802,45 +802,45 @@ config_tls() {
     echo -e "${purple}--------------------These are your configs.----------------------${rest}"
     echo ""
     echo -e "${purple}---------------------------------TUIC5-------------------------------${rest}"
-    tuic="tuic://$uuid:$uuid@$domain:$tuicport?congestion_control=bbr&udp_relay_mode=native&alpn=h3&sni=$domain&allow_insecure=0#Deyshighnet-tuic5"
+    tuic="tuic://$uuid:$uuid@$domain:$tuicport?congestion_control=bbr&udp_relay_mode=native&alpn=h3&sni=$domain&allow_insecure=0#peyman-tuic5"
     echo "$tuic"
     echo ""
     echo "$tuic" | qrencode -t ANSIUTF8
-    echo "$tuic" > "/root/Deyshighnet/configs/tuic_config.txt"
+    echo "$tuic" > "/root/peyman/configs/tuic_config.txt"
     echo -e "${purple}----------------------------------------------------------------${rest}"
     
-    hysteria2="hysteria2://$uuid@$domain:$hyport?insecure=0&mport=$hyport&sni=$domain#Deyshighnet-hy2"
+    hysteria2="hysteria2://$uuid@$domain:$hyport?insecure=0&mport=$hyport&sni=$domain#peyman-hy2"
     echo "$hysteria2"
     echo ""
     echo -e "${purple}-------------------------------HYSTERIA2-----------------------------${rest}"
     echo "$hysteria2" | qrencode -t ANSIUTF8
-    echo "$hysteria2" > "/root/Deyshighnet/configs/hysteria2_config.txt"
+    echo "$hysteria2" > "/root/peyman/configs/hysteria2_config.txt"
     echo -e "${purple}----------------------------------------------------------------${rest}"
     
-    vless="vless://$uuid@$domain:$vlessport?encryption=none&flow=xtls-rprx-vision&security=reality&sni=www.yahoo.com&fp=chrome&pbk=$public_key&sid=$short_id&type=tcp&headerType=none#Deyshighnet-vless-reality"
+    vless="vless://$uuid@$domain:$vlessport?encryption=none&flow=xtls-rprx-vision&security=reality&sni=www.yahoo.com&fp=chrome&pbk=$public_key&sid=$short_id&type=tcp&headerType=none#peyman-vless-reality"
     echo "$vless"
     echo ""
     echo -e "${purple}----------------------------VlESS-TCP-REALITY------------------------${rest}"
     echo "$vless" | qrencode -t ANSIUTF8
-    echo "$vless" > "/root/Deyshighnet/configs/vless_config.txt"
+    echo "$vless" > "/root/peyman/configs/vless_config.txt"
     echo -e "${purple}----------------------------------------------------------------${rest}"
 
-    vlessg="vless://$uuid@$domain_cdn:$vlessgport/?type=grpc&encryption=none&serviceName=$domain_cdn&security=tls&sni=$domain_cdn&alpn=h2&fp=chrome#Deyshighnet-Vless-GRPC-Tls"
+    vlessg="vless://$uuid@$domain_cdn:$vlessgport/?type=grpc&encryption=none&serviceName=$domain_cdn&security=tls&sni=$domain_cdn&alpn=h2&fp=chrome#peyman-Vless-GRPC-Tls"
     echo "$vlessg"
     echo ""
     echo -e "${purple}---------------------------------VLESS-GRPC-TLS-----------------------------${rest}"
     echo "$vlessg" | qrencode -t ANSIUTF8
-    echo "$vlessg" > "/root/Deyshighnet/configs/vless_grpc_config.txt"
+    echo "$vlessg" > "/root/peyman/configs/vless_grpc_config.txt"
     echo -e "${purple}----------------------------------------------------------------${rest}"
 
     
-    vmess='{"add":"'$domain_cdn'","aid":"0","host":"'$domain_cdn'","id":"'$uuid'","net":"ws","path":"'$uuid'","port":"'$vmessport'","ps":"Deyshighnet-ws-tls","tls":"tls","sni":"'$domain_cdn'","type":"none","v":"2"}'
+    vmess='{"add":"'$domain_cdn'","aid":"0","host":"'$domain_cdn'","id":"'$uuid'","net":"ws","path":"'$uuid'","port":"'$vmessport'","ps":"peyman-ws-tls","tls":"tls","sni":"'$domain_cdn'","type":"none","v":"2"}'
     encoded_vmess=$(echo -n "$vmess" | base64 -w 0)
     echo "vmess://$encoded_vmess"
     echo ""
     echo -e "${purple}--------------------------------VMESS-WS-TLS----------------------------${rest}"
     echo "$vmess://$encoded_vmess" | qrencode -t ANSIUTF8
-    echo "vmess://$encoded_vmess" > "/root/Deyshighnet/configs/vmess_config.txt"
+    echo "vmess://$encoded_vmess" > "/root/peyman/configs/vmess_config.txt"
     echo -e "${purple}----------------------------------------------------------------${rest}"
 }
 
@@ -859,13 +859,13 @@ uninstall() {
     # Remove service file
     sudo rm /etc/systemd/system/s-box.service >/dev/null 2>&1
     sudo rm -rf /etc/s-box
-    sudo rm -rf /root/Deyshighnet
+    sudo rm -rf /root/peyman
     sudo systemctl reset-failed
     echo "Uninstallation completed."
 }
 
 config-sing-box(){
-    cat <<EOL> /root/Deyshighnet/configs/config-sing-box.json
+    cat <<EOL> /root/peyman/configs/config-sing-box.json
 {
   "log": {
     "disabled": false,
@@ -1152,7 +1152,7 @@ EOL
 
 #config2
 config-sing-boxx(){
-    cat <<EOL> /root/Deyshighnet/configs/config-sing-box.json
+    cat <<EOL> /root/peyman/configs/config-sing-box.json
 {
   "log": {
     "disabled": false,
@@ -1444,7 +1444,7 @@ EOL
 }
 
 config-nekobox() {
-    cat <<EOL> /root/Deyshighnet/configs/config-nekobox.json
+    cat <<EOL> /root/peyman/configs/config-nekobox.json
 {
   "dns": {
     "independent_cache": true,
@@ -1711,7 +1711,7 @@ EOL
 }
 
 config-nekoboxx() {
-    cat <<EOL> /root/Deyshighnet/configs/config-nekobox.json
+    cat <<EOL> /root/peyman/configs/config-nekobox.json
 {
   "dns": {
     "independent_cache": true,
@@ -1983,7 +1983,7 @@ check_status() {
 menu() {
     clear
     echo "-- VLESS --VMESS --TUIC-- HYSTERIA2-- ARGO--"
-    echo "By --> Deyshighnet * Github.com/Ptechgithub * "
+    echo "By --> Peyman * Github.com/Ptechgithub * "
     echo ""
     check_status
     echo -e "${green} --------${rest}#-${purple} Sing-Box ${rest}-#${green}--------${rest}"
@@ -2014,12 +2014,12 @@ menu() {
 }
 
 show_files() {
-  files=("/root/Deyshighnet/configs/vless_config.txt"
-         "/root/Deyshighnet/configs/vmess_config.txt"
-         "/root/Deyshighnet/configs/tuic_config.txt"
-         "/root/Deyshighnet/configs/hysteria2_config.txt"
-         "/root/Deyshighnet/configs/vmess_Argo_config.txt"
-         "/root/Deyshighnet/configs/vless_grpc_config.txt")
+  files=("/root/peyman/configs/vless_config.txt"
+         "/root/peyman/configs/vmess_config.txt"
+         "/root/peyman/configs/tuic_config.txt"
+         "/root/peyman/configs/hysteria2_config.txt"
+         "/root/peyman/configs/vmess_Argo_config.txt"
+         "/root/peyman/configs/vless_grpc_config.txt")
 
   for file in "${files[@]}"; do
     if [ -e "$file" ]; then
@@ -2067,7 +2067,7 @@ update_vless_sni() {
         read -p "Enter the new SNI (use: www --> www.yahoo.com): " new_sni
         sed -i "/\"type\": \"vless\"/,/\"type\":/s/\"server\": \".*\"/\"server\": \"$new_sni\"/" /etc/s-box/sb.json
         sed -i "/\"type\": \"vless\"/,/\"type\":/s/\"server_name\": \".*\"/\"server_name\": \"$new_sni\"/" /etc/s-box/sb.json
-        sed -i "s/sni=[^\&]*/sni=$new_sni/" /root/Deyshighnet/configs/vless_config.txt
+        sed -i "s/sni=[^\&]*/sni=$new_sni/" /root/peyman/configs/vless_config.txt
         systemctl stop s-box.service
         systemctl start s-box.service
         echo "SNI updated successfully! to $new_sni"
